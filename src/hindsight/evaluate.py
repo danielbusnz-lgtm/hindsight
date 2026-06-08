@@ -36,14 +36,19 @@ def _sharpe(returns: np.ndarray) -> float:
     return float(returns.mean() / sd) if sd else 0.0
 
 
-def _pooled_returns(panel: pd.DataFrame, strategy, lo: int, hi) -> np.ndarray:
-    """Honest per-bar strategy returns over [lo:hi], pooled across all assets."""
-    chunks = []
+def _pooled_pre_post(panel: pd.DataFrame, strategy, cutoff: int):
+    """Run the strategy once per asset; return pooled returns split at the cutoff.
+
+    The strategy can be expensive (an LLM called per bar), so it runs exactly
+    once per asset and the single result is sliced into pre and post windows.
+    """
+    pre_chunks, post_chunks = [], []
     for col in panel.columns:
         prices = panel[col]
         strat = backtest.strategy_returns(prices, strategy(prices))
-        chunks.append(strat.iloc[lo:hi].to_numpy())
-    return np.concatenate(chunks)
+        pre_chunks.append(strat.iloc[:cutoff].to_numpy())
+        post_chunks.append(strat.iloc[cutoff:].to_numpy())
+    return np.concatenate(pre_chunks), np.concatenate(post_chunks)
 
 
 def _bootstrap_ci(returns: np.ndarray, n_boot: int, rng) -> tuple[float, float]:
@@ -67,8 +72,7 @@ def evaluate(panel, strategies, cutoff, n_boot=2000, n_perm=2000, seed=0):
     n = len(strategies)
     scores = []
     for name, fn in strategies.items():
-        pre = _pooled_returns(panel, fn, 0, cutoff)
-        post = _pooled_returns(panel, fn, cutoff, None)
+        pre, post = _pooled_pre_post(panel, fn, cutoff)
         ci_low, ci_high = _bootstrap_ci(post, n_boot, rng)
         p = min(1.0, _permutation_p(post, n_perm, rng) * n)  # Bonferroni
         scores.append(Score(name, _sharpe(pre), _sharpe(post), ci_low, ci_high, p))
