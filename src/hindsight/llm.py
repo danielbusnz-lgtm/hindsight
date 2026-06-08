@@ -42,18 +42,29 @@ def _default_client():
     return OpenAI()  # reads OPENAI_API_KEY from the environment
 
 
-def make_openai_decider(model: str = "gpt-4o-mini", lookback: int = 30, client=None):
-    """Build a decider that asks an OpenAI model to size a position each bar."""
+def make_openai_decider(model: str = "gpt-4o-mini", lookback: int = 30, identify: bool = False, client=None):
+    """Build a decider that asks an OpenAI model to size a position each bar.
+
+    With identify=True the prompt names the ticker and current date (read from
+    the price series' name and index). That identifiable context is what lets a
+    model "recognise" a historical period and leak, so it's needed to measure
+    leakage, but it does not let the decider see any future bar.
+    """
 
     def decide(history: pd.Series) -> float:
         window = history.iloc[-lookback:]
         prices = ", ".join(f"{p:.2f}" for p in window)
+        context = ""
+        if identify:
+            when = history.index[-1]
+            when = when.date().isoformat() if hasattr(when, "date") else str(when)
+            context = f"Asset: {history.name}. Current date: {when}.\n"
         completion = (client or _default_client()).chat.completions.parse(
             model=model,
             temperature=0,
             messages=[
                 {"role": "system", "content": _SYSTEM},
-                {"role": "user", "content": f"Recent prices: {prices}\nYour position for the next bar?"},
+                {"role": "user", "content": f"{context}Recent prices: {prices}\nYour position for the next bar?"},
             ],
             response_format=Decision,
         )
