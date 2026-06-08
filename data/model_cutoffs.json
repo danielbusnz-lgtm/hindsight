@@ -1,0 +1,18 @@
+{
+  "_note": "Provider-stated knowledge cutoffs. These are approximate FLOORS, not guarantees: a model often knows events after its stated date (contamination, RLHF). ISO date = first day of the stated month. Verify against provider docs and consider a safety buffer.",
+  "models": {
+    "gpt-4o": {"cutoff": "2023-10-01", "provider": "openai"},
+    "gpt-4o-mini": {"cutoff": "2023-10-01", "provider": "openai"},
+    "gpt-4-turbo": {"cutoff": "2023-12-01", "provider": "openai"},
+    "gpt-4.1": {"cutoff": "2024-06-01", "provider": "openai"},
+    "gpt-4.1-mini": {"cutoff": "2024-06-01", "provider": "openai"},
+    "gpt-3.5-turbo": {"cutoff": "2021-09-01", "provider": "openai"},
+    "claude-3-opus": {"cutoff": "2023-08-01", "provider": "anthropic"},
+    "claude-3-sonnet": {"cutoff": "2023-08-01", "provider": "anthropic"},
+    "claude-3-haiku": {"cutoff": "2023-08-01", "provider": "anthropic"},
+    "claude-3-5-sonnet": {"cutoff": "2024-04-01", "provider": "anthropic"},
+    "claude-3-7-sonnet": {"cutoff": "2024-10-01", "provider": "anthropic"},
+    "claude-sonnet-4-5": {"cutoff": "2025-01-01", "provider": "anthropic"},
+    "claude-opus-4-7": {"cutoff": "2026-01-01", "provider": "anthropic"}
+  }
+}
