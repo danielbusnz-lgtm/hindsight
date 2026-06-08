@@ -12,7 +12,12 @@ from pathlib import Path
 FIELDS = [
     "run_at", "model", "ticker", "window", "cutoff", "strategy",
     "sharpe_pre", "sharpe_post", "ci_low", "ci_high", "p_value",
+    "leakage", "leakage_ci_low", "leakage_ci_high",
 ]
+
+
+def _r(x):
+    return round(x, 4) if x is not None else ""
 
 
 def append(path, scores, **meta) -> Path:
@@ -39,6 +44,9 @@ def append(path, scores, **meta) -> Path:
                 "ci_low": round(s.ci_low, 4),
                 "ci_high": round(s.ci_high, 4),
                 "p_value": round(s.p_value, 4),
+                "leakage": _r(s.leakage),
+                "leakage_ci_low": _r(s.leakage_ci_low),
+                "leakage_ci_high": _r(s.leakage_ci_high),
                 **meta,
             })
     return path
