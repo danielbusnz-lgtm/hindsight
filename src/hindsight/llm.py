@@ -1,38 +1,37 @@
-"""OpenAI decider: an LLM that picks long / flat / short from recent prices.
+"""OpenAI decider: an LLM that sizes a position from recent prices.
 
 Plugs into `harness.walk_forward` as the `decide` callable. It only ever sees
 the price window handed to it, so it cannot peek at the future. The model is
-forced to answer with a single side via a structured-output schema, so there
-is no free text to parse.
+forced to answer with a single conviction number via a structured-output
+schema, so there is no free text to parse. The number is clamped to [-1, +1]
+(fully short to fully long; 0 is flat). The backtester multiplies it straight
+into returns, so a 0.5 means "half-sized long".
 
     from hindsight import harness, llm
     decide = llm.make_openai_decider(model="gpt-4o-mini")
     positions = harness.walk_forward(prices, decide)
 """
 
-from enum import Enum
 from functools import lru_cache
 
 import pandas as pd
-from pydantic import BaseModel
-
-
-class Side(str, Enum):
-    long = "long"
-    flat = "flat"
-    short = "short"
+from pydantic import BaseModel, Field
 
 
 class Decision(BaseModel):
-    side: Side
+    conviction: float = Field(
+        description="Position for the next bar, from -1 (max short) to +1 (max long); 0 is flat."
+    )
 
 
-_TO_POSITION = {Side.long: 1.0, Side.flat: 0.0, Side.short: -1.0}
+def _clamp(x: float) -> float:
+    return max(-1.0, min(1.0, x))
+
 
 _SYSTEM = (
     "You are a trading model. You are given recent prices for one asset, oldest "
-    "first. Decide your position for the NEXT bar: long if you expect the price "
-    "to rise, short if you expect it to fall, flat if unsure. Answer with one side."
+    "first. Choose your position for the NEXT bar as a number from -1 to +1: "
+    "+1 fully long, -1 fully short, 0 flat. Size it by how confident you are."
 )
 
 
@@ -44,7 +43,7 @@ def _default_client():
 
 
 def make_openai_decider(model: str = "gpt-4o-mini", lookback: int = 30, client=None):
-    """Build a decider that asks an OpenAI model for a position each bar."""
+    """Build a decider that asks an OpenAI model to size a position each bar."""
 
     def decide(history: pd.Series) -> float:
         window = history.iloc[-lookback:]
@@ -59,6 +58,6 @@ def make_openai_decider(model: str = "gpt-4o-mini", lookback: int = 30, client=N
             response_format=Decision,
         )
         parsed = completion.choices[0].message.parsed
-        return _TO_POSITION[parsed.side] if parsed else 0.0
+        return _clamp(parsed.conviction) if parsed else 0.0
 
     return decide

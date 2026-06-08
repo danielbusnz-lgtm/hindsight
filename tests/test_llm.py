@@ -1,36 +1,42 @@
 import pandas as pd
 
-from hindsight.llm import Decision, Side, make_openai_decider
+from hindsight.llm import Decision, make_openai_decider
 
 
 class _FakeCompletions:
-    def __init__(self, side):
-        self._side = side
+    def __init__(self, conviction):
+        self._conviction = conviction
         self.seen = None
 
     def parse(self, **kwargs):
         self.seen = kwargs
-        parsed = Decision(side=self._side)
+        parsed = Decision(conviction=self._conviction)
         message = type("M", (), {"parsed": parsed})()
         choice = type("C", (), {"message": message})()
         return type("R", (), {"choices": [choice]})()
 
 
 class _FakeClient:
-    def __init__(self, side):
-        self.chat = type("Chat", (), {"completions": _FakeCompletions(side)})()
+    def __init__(self, conviction):
+        self.chat = type("Chat", (), {"completions": _FakeCompletions(conviction)})()
 
 
-def test_side_maps_to_position():
+def test_conviction_passes_through():
     prices = pd.Series([100.0, 101.0, 102.0])
-    assert make_openai_decider(client=_FakeClient(Side.long))(prices) == 1.0
-    assert make_openai_decider(client=_FakeClient(Side.flat))(prices) == 0.0
-    assert make_openai_decider(client=_FakeClient(Side.short))(prices) == -1.0
+    assert make_openai_decider(client=_FakeClient(0.5))(prices) == 0.5
+    assert make_openai_decider(client=_FakeClient(-0.25))(prices) == -0.25
+    assert make_openai_decider(client=_FakeClient(0.0))(prices) == 0.0
+
+
+def test_conviction_is_clamped():
+    prices = pd.Series([100.0, 101.0, 102.0])
+    assert make_openai_decider(client=_FakeClient(1.7))(prices) == 1.0
+    assert make_openai_decider(client=_FakeClient(-3.0))(prices) == -1.0
 
 
 def test_lookback_trims_the_window():
     prices = pd.Series([float(i) for i in range(100)])
-    client = _FakeClient(Side.flat)
+    client = _FakeClient(0.0)
     make_openai_decider(client=client, lookback=10)(prices)
     # Only the last 10 prices should reach the prompt.
     user_msg = client.chat.completions.seen["messages"][1]["content"]
