@@ -34,13 +34,17 @@ means the strategy was remembering.
 - `strategies.py` - stand-in strategies (cheater, momentum, memorizer, noise)
   used as ground truth while there are no real models yet.
 - `evaluate.py` - the leaderboard: cutoff split + the three layers above.
-- `examples/leaderboard_demo.py` - runs it on synthetic data, no LLMs.
+- `harness.py` - walk-forward loop. Hands a decider only `prices[:t+1]` each
+  bar, so the future can't leak. An LLM plugs in as the decider.
+- `llm.py` - OpenAI decider. Forces a long/flat/short answer, maps to +1/0/-1.
+- `examples/` - leaderboard demo (no LLMs) and a live decider smoke test.
 
 ## Next
 
+- Wire the LLM decider into `evaluate.py` so real models run the leaderboard
+  (expensive: many bars x assets x models = thousands of calls).
 - Surface the leakage gap (`sharpe_pre - sharpe_post`) as its own column.
-- The real missing piece: an LLM harness that turns a (model, prompt) into a
-  positions series by calling the model bar by bar.
+- Richer prompts (dates/news) where memorization leakage actually lives.
 - Stress-test a short post-cutoff window to see when the CIs blow up.
 
 ## Known limits
