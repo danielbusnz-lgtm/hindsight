@@ -11,7 +11,7 @@ Scoped small (one ticker, weekly bars) to keep the API bill tiny.
 
 import pandas as pd
 
-from hindsight import cutoffs, evaluate, harness, llm, strategies
+from hindsight import cutoffs, evaluate, harness, llm, results, strategies
 
 MODEL = "gpt-4o-mini"
 TICKER = "AAPL"
@@ -38,3 +38,13 @@ print("-" * 68)
 for s in board:
     ci = f"[{s.ci_low:+.2f}, {s.ci_high:+.2f}]"
     print(f"{s.name:12s} {s.sharpe_pre:>11.3f} {s.sharpe_post:>12.3f} {ci:>20s} {s.p_value:>8.3f}")
+
+out = results.append(
+    "data/runs/leaderboard.csv",
+    board,
+    model=MODEL,
+    ticker=TICKER,
+    window=f"{weekly.index[0].date()}..{weekly.index[-1].date()}",
+    cutoff=str(cut.date()),
+)
+print(f"\nappended {len(board)} rows to {out}")
