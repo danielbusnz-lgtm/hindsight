@@ -1,12 +1,17 @@
 # hindsight
 
-> Can an LLM actually trade stocks, or does it just look like it because it has already seen the future?
+> Can LLMs actually predict the future, or do they just look like it because they have already seen it happen?
 
-When you backtest an LLM trading strategy on past price data, the model may have trained on that period. It isn't predicting, it's remembering, so the backtest looks great and means nothing. `hindsight` answers the question honestly: it grades every strategy only on data *after* the model's training cutoff, where there is nothing to remember. What survives is real skill, if any.
+When you test an LLM's forecasting on historical data, the model may have trained on that period. It isn't predicting, it's remembering, so the result looks great and means nothing. `hindsight` answers the question honestly: it grades every strategy only on data *after* the model's training cutoff, where there is nothing to remember. What survives is real skill, if any.
 
-**Status:** working research tool. The backtester, walk-forward harness, leaderboard, and OpenAI decider all run end to end. First real result is in. See [DESIGN.md](DESIGN.md) for methodology and known limits.
+The same method applies to anything an LLM might forecast. hindsight runs it across two domains:
 
-## First finding
+- **Markets (working today):** can an LLM trade stocks?
+- **World events (in development):** can an LLM forecast real-world outcomes better than prediction markets like Polymarket?
+
+**Status:** the markets domain runs end to end, the backtester, walk-forward harness, leaderboard, and OpenAI decider all work, and a first result is in. The world-events (Polymarket) domain is in development: same engine, new data and scoring. See [DESIGN.md](DESIGN.md) for methodology and known limits.
+
+## First finding (markets)
 
 Does gpt-4o-mini have real trading skill? On weekly direction (AAPL, MSFT, NVDA, SPY, TSLA), graded across its October 2023 training cutoff:
 
@@ -22,15 +27,17 @@ It also shows **no detectable leakage**: the post-cutoff drop is no larger than 
 
 ## How it works
 
-The question is **performance**. Leakage is the thing that makes naive backtests lie, so the method is built to be leakage-proof, and the leakage gap is reported as a diagnostic.
+The question is **performance**, can the model forecast for real. Leakage (memorization) is the thing that makes naive backtests lie, so the method is built to be leakage-proof, and the leakage gap is reported as a diagnostic.
 
-**Grade only on post-cutoff data.** You can't *detect* leakage from a single backtest, real skill and memorization look identical in the numbers. So don't try; make it impossible. Grade every strategy on the common window after the latest training cutoff in the lineup. Same blind exam for everyone.
+The engine is **domain-agnostic**: the cutoff split, the walk-forward harness, and the statistical layer are shared. Each domain plugs in its own data and scoring (returns/Sharpe for markets; Brier/calibration for world events).
+
+**Grade only on post-cutoff data.** You can't *detect* leakage from a single backtest, real skill and memorization look identical in the numbers. So don't try; make it impossible. Grade every candidate on the common window after the latest training cutoff in the lineup. Same blind exam for everyone.
 
 **Honest backtest.** Positions earn the *next* bar's return, never a bar the strategy could have already seen. That single shift is the whole defense against look-ahead.
 
 **Walk-forward harness.** Calls a decider with `prices[:t+1]` at each bar, so the future is never in scope. An LLM decider plugs in here.
 
-**Fair leaderboard.** Splits each strategy's returns at the cutoff, pools across assets (breadth), bootstraps a 95% CI on each Sharpe, and runs a permutation test (Bonferroni-adjusted). The `sharpe_pre` vs `sharpe_post` gap is the **leakage diagnostic**: a strategy that collapses across the cutoff was remembering, which explains why its naive backtest looked good. The diff-in-differences column subtracts a no-memory control (momentum) to strip out the market regime.
+**Fair leaderboard.** Splits each candidate's outcomes at the cutoff, pools across many bets (breadth), bootstraps a 95% CI on each score, and runs a permutation test (Bonferroni-adjusted). The pre-cutoff vs post-cutoff gap is the **leakage diagnostic**: a candidate that collapses across the cutoff was remembering, which explains why its naive backtest looked good. The diff-in-differences column subtracts a no-memory control to strip out the regime.
 
 ## Backtest one strategy
 
