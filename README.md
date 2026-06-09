@@ -9,7 +9,7 @@ The same method applies to anything an LLM might forecast. hindsight runs it acr
 - **Markets (working today):** can an LLM trade stocks?
 - **World events (in development):** can an LLM forecast real-world outcomes better than prediction markets like Polymarket?
 
-**Status:** the markets domain runs end to end, the backtester, walk-forward harness, leaderboard, and OpenAI decider all work, and a first result is in. The world-events (Polymarket) domain is in development: same engine, new data and scoring. See [DESIGN.md](DESIGN.md) for methodology and known limits.
+**Status:** the markets domain runs end to end, the backtester, walk-forward harness, leaderboard, and OpenAI decider all work, and a first result is in. The world-events (Polymarket) domain is in development: same engine, new data and scoring. See [DESIGN.md](DESIGN.md) for methodology and known limits, and [math-and-results.md](math-and-results.md) for the formulas and current numbers.
 
 ## First finding (markets)
 
