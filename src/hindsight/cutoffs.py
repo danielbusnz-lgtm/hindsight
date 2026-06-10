@@ -23,6 +23,14 @@ def cutoff(model: str) -> pd.Timestamp:
     return pd.Timestamp(_REGISTRY[model]["cutoff"])
 
 
+def provider(model: str) -> str:
+    """Which API serves this model ("openai" or "anthropic"). Same KeyError
+    contract as `cutoff`: an unregistered model is an error, not a guess."""
+    if model not in _REGISTRY:
+        raise KeyError(f"no provider on record for {model!r}; add it to {_PATH.name}")
+    return _REGISTRY[model]["provider"]
+
+
 def common_cutoff(models) -> pd.Timestamp:
     """Latest cutoff across models: the start of the window they were all blind to.
 
