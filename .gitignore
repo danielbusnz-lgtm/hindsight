@@ -10,3 +10,9 @@ dist/
 venv/
 .env
 .DS_Store
+
+# LaTeX build artifacts (writeup/)
+writeup/*.aux
+writeup/*.log
+writeup/*.out
+writeup/build.log

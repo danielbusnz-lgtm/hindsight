@@ -25,6 +25,39 @@ momentum          0.103        0.036  (control)
 
 It also shows **no detectable leakage**: the post-cutoff drop is no larger than momentum's and the leakage CI includes zero. That's an honest null, not a failure, and the diff-in-differences design subtracts the market regime out, so the CI is actually saying something. (It never looked impressive even pre-cutoff, so there was little memorization to find in the first place.)
 
+## Quickstart
+
+```bash
+git clone https://github.com/danielbusnz-lgtm/hindsight.git
+cd hindsight
+
+python -m venv .venv
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
+
+# Core only (no LLM calls)
+pip install -e ".[dev]"
+
+# Confirm everything works: 14 tests, ~1 second
+python -m pytest
+```
+
+Zero-cost proof the machine works, no API key needed:
+
+```bash
+python examples/leaderboard_demo.py
+```
+
+Real data, costs money:
+
+```bash
+# Fetch price data, then run the leaderboard with an OpenAI decider
+pip install -e ".[llm]"
+python scripts/fetch_prices.py
+OPENAI_API_KEY=sk-... python examples/real_leaderboard.py
+```
+
+Results append to `data/runs/leaderboard.csv`.
+
 ## How it works
 
 The question is **performance**, can the model forecast for real. Leakage (memorization) is the thing that makes naive backtests lie, so the method is built to be leakage-proof, and the leakage gap is reported as a diagnostic.
@@ -52,11 +85,9 @@ r = backtest.run(prices, positions)
 print(r.total_return, r.sharpe, r.max_drawdown)
 ```
 
-## Run the leaderboard (controls only, no API needed)
+## Leaderboard demo output
 
-```bash
-python examples/leaderboard_demo.py
-```
+The demo plants a memorizer that knows the past, a momentum control, and a noise baseline:
 
 ```
 strategy    sharpe_pre  sharpe_post      post_95%_CI    p(adj)
@@ -66,29 +97,6 @@ noise            0.019        0.010   [-0.04, +0.06]    1.000
 ```
 
 The memorizer looks brilliant before the cutoff and collapses after. That gap is the leakage signal the method is designed to expose.
-
-## Run with a real model
-
-```bash
-OPENAI_API_KEY=... python examples/real_leaderboard.py
-```
-
-Results append to `data/runs/leaderboard.csv`.
-
-## Install
-
-```bash
-python -m venv .venv
-source .venv/bin/activate
-
-# Core only (no LLM calls)
-pip install -e ".[dev]"
-
-# With OpenAI decider
-pip install -e ".[dev,llm]"
-
-pytest   # 14 tests
-```
 
 ## License
 
