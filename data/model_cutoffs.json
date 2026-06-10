@@ -12,7 +12,12 @@
     "claude-3-haiku": {"cutoff": "2023-08-01", "provider": "anthropic"},
     "claude-3-5-sonnet": {"cutoff": "2024-04-01", "provider": "anthropic"},
     "claude-3-7-sonnet": {"cutoff": "2024-10-01", "provider": "anthropic"},
-    "claude-sonnet-4-5": {"cutoff": "2025-01-01", "provider": "anthropic"},
-    "claude-opus-4-7": {"cutoff": "2026-01-01", "provider": "anthropic"}
+    "claude-sonnet-4-5": {"cutoff": "2025-07-01", "provider": "anthropic"},
+    "claude-haiku-4-5": {"cutoff": "2025-07-01", "provider": "anthropic"},
+    "claude-opus-4-5": {"cutoff": "2025-08-01", "provider": "anthropic"},
+    "claude-opus-4-6": {"cutoff": "2025-08-01", "provider": "anthropic"},
+    "claude-opus-4-7": {"cutoff": "2026-01-01", "provider": "anthropic"},
+    "claude-opus-4-8": {"cutoff": "2026-01-01", "provider": "anthropic"},
+    "claude-sonnet-4-6": {"cutoff": "2026-01-01", "provider": "anthropic"}
   }
 }

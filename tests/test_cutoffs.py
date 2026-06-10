@@ -16,4 +16,4 @@ def test_unknown_model_raises():
 def test_common_cutoff_is_the_latest():
     # The shared blind window starts at the newest model's cutoff.
     models = ["gpt-4o-mini", "claude-3-7-sonnet", "claude-sonnet-4-5"]
-    assert cutoffs.common_cutoff(models) == pd.Timestamp("2025-01-01")
+    assert cutoffs.common_cutoff(models) == pd.Timestamp("2025-07-01")
